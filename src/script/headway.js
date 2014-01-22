@@ -69,15 +69,25 @@ headway.UserInterface = (function() {
 
 headway.IndexedDbAdapter = (function( indexedDB ) {
   var constructor = function IndexedDbAdapter() {
-    var targetDbVersion = 1 ,
+    var my = this,
+        dbName = 'headway' ,
+        targetDbVersion = 1 ,
         db ;
+
+    this.getWorksheetRepo = function getWorksheetRepo() {
+      return constructor.WorksheetRepo.create( withDb );
+    }
+
+    this.getDbName = function getDbName() {
+      return dbName;
+    };
 
     function withDb( options ){
       var request;
       if ( db ) {
         options.onSuccess( db );
       } else {
-        request = indexedDB.open( 'headway', targetDbVersion );
+        request = indexedDB.open( my.getDbName(), targetDbVersion );
 
         request.onupgradeneeded = function onupgradeneeded( event ) {
           upgradeDb( event.target.result );
@@ -100,9 +110,6 @@ headway.IndexedDbAdapter = (function( indexedDB ) {
       upgradingDb.createObjectStore( 'worksheets', { keyPath: 'name' } );
     }
 
-    this.getWorksheetRepo = function getWorksheetRepo() {
-      return constructor.WorksheetRepo.create( withDb );
-    }
   };
 
   constructor.create = function create() {
@@ -133,9 +140,15 @@ headway.IndexedDbAdapter.WorksheetRepo = (function() {
     };
 
     function addWithDb( db, worksheet, options ) {
-      var transaction = db.transaction(['worksheets'], 'readwrite') ,
-        store = transaction.objectStore('worksheets') ,
-        request = store.add( worksheet ) ;
+      var transaction, store, request ;
+      try{
+        transaction = db.transaction(['worksheets'], 'readwrite');
+        store = transaction.objectStore('worksheets');
+        request = store.add( worksheet );
+      } catch(e) {
+        options.onError( e.message );
+        return;
+      }
 
       request.onsuccess = function onsuccess( event ) {
         options.onSuccess();
