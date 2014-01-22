@@ -13,11 +13,14 @@ var headway = (function( my ) {
 })( headway || {} );
 
 headway.UserInterface = (function() {
-  var constructor = function UserInterface( options ) {
+  var constructor;
+
+  constructor = function UserInterface( options ) {
     var dbAdapter = options.dbAdapter;
 
     this.start = function start() {
-      var addWorksheetButton = document.forms.addWorksheetForm.addWorksheetButton ;
+      var addWorksheetButton;
+      addWorksheetButton = document.forms.addWorksheetForm.addWorksheetButton ;
       addWorksheetButton.addEventListener( 'click', addWorksheet );
       refreshWorksheetList();
     };
@@ -25,10 +28,11 @@ headway.UserInterface = (function() {
     function getWorksheetRepo() { return dbAdapter.getWorksheetRepo() }
 
     function addWorksheet( event ){
-      var
-        newWorksheetNameInp = document.forms.addWorksheetForm.newWorksheetName ,
-        newWorksheetName = newWorksheetNameInp.value ,
-        worksheet = { name : newWorksheetName } ;
+      var newWorksheetNameInp, newWorksheetName, worksheet;
+
+      newWorksheetNameInp = document.forms.addWorksheetForm.newWorksheetName;
+      newWorksheetName = newWorksheetNameInp.value;
+      worksheet = { name : newWorksheetName };
 
       getWorksheetRepo().add( worksheet, {
         onSuccess : refreshWorksheetList ,
@@ -47,13 +51,15 @@ headway.UserInterface = (function() {
       });
 
       function renderWorksheetListForNames( nameList ) {
-        var listEl = document.createElement("UL");
+        var listEl, itemEl, containerEl;
+
+        listEl = document.createElement("UL");
         nameList.forEach(function eachName( name ) {
-          var itemEl = document.createElement("LI");
+          itemEl = document.createElement("LI");
           itemEl.textContent = name;
           listEl.appendChild( itemEl );
         });
-        var containerEl = document.getElementById('worksheetListContainer');
+        containerEl = document.getElementById('worksheetListContainer');
         containerEl.innerHTML = '';
         containerEl.appendChild( listEl );
       }
@@ -68,11 +74,29 @@ headway.UserInterface = (function() {
 })();
 
 headway.IndexedDbAdapter = (function( indexedDB ) {
-  var constructor = function IndexedDbAdapter() {
-    var my = this,
-        dbName = 'headway' ,
-        targetDbVersion = 1 ,
-        db ;
+  var constructor;
+
+  constructor = function IndexedDbAdapter() {
+    var my, dbName, targetDbVersion, db;
+
+    my = this;
+    dbName = 'headway';
+    targetDbVersion = 1;
+
+    this.deleteDb = function deleteDb( options ) {
+      var request;
+
+      if( db ) {
+        db.close();
+        db = null;
+      }
+
+      request = indexedDB.deleteDatabase( my.getDbName() );
+      request.onsuccess = options.onSuccess;
+      request.onerror = function onerror( event ) {
+        options.onError( event.message );
+      };
+    };
 
     this.getWorksheetRepo = function getWorksheetRepo() {
       return constructor.WorksheetRepo.create( withDb );
@@ -84,6 +108,7 @@ headway.IndexedDbAdapter = (function( indexedDB ) {
 
     function withDb( options ){
       var request;
+
       if ( db ) {
         options.onSuccess( db );
       } else {
@@ -97,8 +122,7 @@ headway.IndexedDbAdapter = (function( indexedDB ) {
           options.onSuccess( db );
         };
         request.onerror = function onerror( event ) {
-          var message = event.message;
-          options.onError( message );
+          options.onError( event.message );
         };
       }
     }
@@ -120,7 +144,9 @@ headway.IndexedDbAdapter = (function( indexedDB ) {
 })( indexedDB );
 
 headway.IndexedDbAdapter.WorksheetRepo = (function() {
-  var constructor = function WorksheetRepo( withDb ) {
+  var constructor;
+
+  constructor = function WorksheetRepo( withDb ) {
     this.add = function add( worksheet, options ) {
       withDb({
         onSuccess : function onSuccess( db ) {
@@ -141,6 +167,7 @@ headway.IndexedDbAdapter.WorksheetRepo = (function() {
 
     function addWithDb( db, worksheet, options ) {
       var transaction, store, request ;
+
       try{
         transaction = db.transaction(['worksheets'], 'readwrite');
         store = transaction.objectStore('worksheets');
@@ -155,16 +182,17 @@ headway.IndexedDbAdapter.WorksheetRepo = (function() {
       };
 
       request.onerror = function onerror( event ) {
-        var message = request.error.message;
-        options.onError( message );
+        options.onError( request.error.message );
       };
     }
 
     function fetchNameListWithDb( db, options ) {
-      var transaction = db.transaction(['worksheets'], 'readonly') ,
-        store = transaction.objectStore('worksheets') ,
-        request = store.openCursor() ,
-        nameList = [] ;
+      var transaction, store, request, nameList;
+
+      transaction = db.transaction(['worksheets'], 'readonly');
+      store = transaction.objectStore('worksheets');
+      request = store.openCursor();
+      nameList = [];
 
       request.onsuccess = function onsuccess( event ) {
         var cursor = event.target.result;
@@ -176,8 +204,7 @@ headway.IndexedDbAdapter.WorksheetRepo = (function() {
       };
 
       request.onerror = function onerror( event ) {
-        var message = request.error.message;
-        options.onError( message );
+        options.onError( request.error.message );
       };
 
       function handleCursorEntry( cursor ) {

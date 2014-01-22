@@ -49,6 +49,14 @@ describe( 'headway', function() {
 
       beforeEach(function() {
         adapter = IndexedDbAdapter.create();
+        adapter.deleteDb({
+          onSuccess: function() {
+            repository = adapter.getWorksheetRepo();
+          },
+          onError: function( msg ) {
+            expect( "onError receieved " + msg ).toBe( "not received" );
+          }
+        });
         repository = adapter.getWorksheetRepo();
       });
 
@@ -57,7 +65,6 @@ describe( 'headway', function() {
           var results;
 
           beforeEach(function( done ) {
-
             function run( options ) {
               var worksheet = { wrongWithThisPicture: "something is" };
               repository.add( worksheet, options );
