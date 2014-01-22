@@ -65,20 +65,38 @@ describe( 'headway', function() {
           var results;
 
           beforeEach(function( done ) {
+            var worksheet = { wrongWithThisPicture: "something is" };
+
             function run( options ) {
-              var worksheet = { wrongWithThisPicture: "something is" };
               repository.add( worksheet, options );
             }
 
             results = runHeadwayRequest( run, done );
           });
 
-          it("fails with an error", function() {
+          it("reports and error", function() {
             expect( results.succeeded ).toBe( false );
             expect( results.errorMessage.length ).toBeGreaterThan( 0 );
           });
         });
 
+        describe("given an object with a unique 'name' string", function() {
+          var results;
+
+          beforeEach(function( done ) {
+            var worksheet = { name: "Some unique name" };
+
+            function run( options ) {
+              repository.add( worksheet, options );
+            }
+
+            results = runHeadwayRequest( run, done );
+          });
+
+          it("reports success", function() {
+            expect( results.succeeded ).toBe( true );
+          });
+        });
       });
     });
   });
