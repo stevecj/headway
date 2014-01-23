@@ -129,7 +129,7 @@ headway.IndexedDbAdapter = (function( indexedDB ) {
 
     function upgradeDb( upgradingDb ) {
       upgradingDb.onerror = function onerror( event ) {
-        alert('upgrading database');
+        console.log('error upgrading database');
       };
       upgradingDb.createObjectStore( 'worksheets', { keyPath: 'name' } );
     }

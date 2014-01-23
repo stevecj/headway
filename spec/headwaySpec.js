@@ -47,17 +47,20 @@ describe( 'headway', function() {
     describe( '.WorksheetRepo', function() {
       var repository;
 
-      beforeEach(function() {
+      beforeEach(function( done ) {
         adapter = IndexedDbAdapter.create();
-        adapter.deleteDb({
-          onSuccess: function() {
-            repository = adapter.getWorksheetRepo();
-          },
-          onError: function( msg ) {
-            expect( "onError receieved " + msg ).toBe( "not received" );
-          }
-        });
-        repository = adapter.getWorksheetRepo();
+        setTimeout(function() {
+          adapter.deleteDb({
+            onSuccess: function() {
+              repository = adapter.getWorksheetRepo();
+              done();
+            },
+            onError: function( msg ) {
+              expect( "onError receieved " + msg ).toBe( "not received" );
+              done();
+            }
+          });
+        }, 1);
       });
 
       describe('#add()', function() {
@@ -71,7 +74,9 @@ describe( 'headway', function() {
               repository.add( worksheet, options );
             }
 
-            results = runHeadwayRequest( run, done );
+            setTimeout(function() {
+              results = runHeadwayRequest( run, done );
+            }, 1);
           });
 
           it("reports and error", function() {
@@ -90,7 +95,9 @@ describe( 'headway', function() {
               repository.add( worksheet, options );
             }
 
-            results = runHeadwayRequest( run, done );
+            setTimeout(function() {
+              results = runHeadwayRequest( run, done );
+            }, 1);
           });
 
           it("reports success", function() {
