@@ -6,14 +6,14 @@ describe( 'headway.indexedDbAdapter', function () {
 
   beforeEach( function () {
     this.asyncStep = _asyncStep;
+    this.asyncErrorRecorder = _asyncErrorRecorder;
     this.promiseIsFulfilled = _promiseIsFulfilled;
+    this.promiseIsRejected  = _promiseIsRejected;
   });
 
   afterEach( function () {
     if( this.specAsyncError ) { throw this.specAsyncError; }
   });
-
-  function noOp() { }
 
   function _asyncStep( fn ) {
     var me = this;
@@ -26,15 +26,31 @@ describe( 'headway.indexedDbAdapter', function () {
     };
   }
 
+  function _asyncErrorRecorder() {
+    var me = this;
+    return function ( error ) {
+      me.specAsyncError = error;
+    }
+    this.specAsyncError = error;
+  }
+
   function _promiseIsFulfilled( promise, done, onFulfilledSpec ) {
     promise.
       then(
         this.asyncStep( onFulfilledSpec ),
-        onRejected
+        this.asyncErrorRecorder()
+      ).then( done, done );
+  }
+
+  function _promiseIsRejected( promise, done, onRejectedSpec ) {
+    promise.
+      then(
+        onUnexpectedlyFulfilled,
+        this.asyncStep( onRejectedSpec )
       ).then( done, done );
 
-    function onRejected( error ) {
-      expect( error ).toEqual( 'no error result' );
+    function onUnexpectedlyFulfilled( value ) {
+      expect( "fulfilled with " + value ).toEqual( "not fulfilled" );
     }
   }
 
@@ -47,7 +63,14 @@ describe( 'headway.indexedDbAdapter', function () {
       DB_TARGET_VERSION = 11;
 
       beforeEach( function () {
+        var me = this;
         indexedDB.deleteDatabase( DB_NAME );
+
+        this.subject = function subject() {
+          me.asyncConnection = me.asyncConnection ||
+            core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
+          return this.asyncConnection;
+        };
       });
 
       afterEach( function () {
@@ -57,11 +80,41 @@ describe( 'headway.indexedDbAdapter', function () {
 
       describe( "when the database does not exist", function () {
         it( "is fulfilled with a connection to the newly created database", function ( done ) {
-          var asyncConnection = core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
-          this.promiseIsFulfilled( asyncConnection, done, function ( db ){
+          this.promiseIsFulfilled( this.subject(), done, function ( db ) {
             this.db = db;
             expect( db.name ).toEqual( DB_NAME );
             expect( db.version ).toEqual( DB_TARGET_VERSION );
+          });
+        });
+      });
+
+      describe( "when the database exists with the target version", function () {
+        beforeEach( function ( done ) {
+          core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION ).then(
+            this.asyncStep( function ( db ) { db.close(); } )
+          ).then( done, done );
+        });
+
+        it( "is fulfilled with a connection to the existing database", function ( done ) {
+          //var asyncConnection = core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
+          this.promiseIsFulfilled( this.subject(), done, function ( db ) {
+            this.db = db;
+            expect( db.name ).toEqual( DB_NAME );
+            expect( db.version ).toEqual( DB_TARGET_VERSION );
+          });
+        });
+      });
+
+      describe( "when the database exists with a later version than the target", function () {
+        beforeEach( function ( done ) {
+          core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION + 1 ).then(
+            this.asyncStep( function ( db ) { db.close(); } )
+          ).then( done, done );
+        });
+
+        it( "is rejected with a DOMError instance", function ( done ) {
+          this.promiseIsRejected( this.subject(), done, function ( error ) {
+            expect( error instanceof DOMError ).toBeTruthy();
           });
         });
       });

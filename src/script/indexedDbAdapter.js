@@ -4,7 +4,7 @@ headway.indexedDbAdapter = headway.indexedDbAdapter || {};
 
 headway.indexedDbAdapter.core = (function ( module ) {
 
-  module.asyncGetConnection = function getConnectionable( dbName, targetVersion ) {
+  module.asyncGetConnection = function asyncGetConnection( dbName, targetVersion ) {
     var bootstrap = ayepromise.defer();
     bootstrap.resolve();
 
