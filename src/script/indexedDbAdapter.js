@@ -11,8 +11,8 @@ headway.indexedDbAdapter.core = (function ( module ) {
     return bootstrap.promise.then( function () {
       var request = indexedDB.open( dbName, targetVersion );
       var defer = ayepromise.defer();
-      request.onsuccess = function () { defer.resolve( request.result ); };
-      request.onerror   = function () { defer.reject( request.error ); };
+      request.onsuccess = function () { defer.resolve ( request.result ); };
+      request.onerror   = function () { defer.reject  ( request.error  ); };
       return defer.promise;
     });
   };
