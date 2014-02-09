@@ -5,67 +5,12 @@ describe( 'headway.indexedDbAdapter', function () {
   indexedDbAdapter = root.headway.indexedDbAdapter;
 
   beforeEach( function () {
-    this.def                  = _def;
-    this.asyncStep            = _asyncStep;
-    this.getCaptureAsyncError = _getCaptureAsyncError;
-    this.promiseIsFulfilled   = _promiseIsFulfilled;
-    this.promiseIsRejected    = _promiseIsRejected;
+    jasmine.headway.userContextExt.applyTo( this );
   });
 
   afterEach( function () {
     if( this.specAsyncError ) { throw this.specAsyncError; }
   });
-
-  function _def( name, fn ) {
-    var me, getterName, memoName;
-    me = this;
-    getterName = 'get' + name.charAt(0).toUpperCase() + name.substr(1)
-    memoName = '_' + name;
-
-    this[getterName] = function def() {
-      me[memoName] = me[memoName] || fn.call(me);
-      return me[memoName];
-    }
-  }
-
-  function _asyncStep( fn ) {
-    var me = this;
-    return function () {
-      try {
-        fn.apply( me, arguments );
-      } catch( e ) {
-        me.specAsyncError = e;
-      }
-    };
-  }
-
-  function _getCaptureAsyncError() {
-    var me = this;
-    return function ( error ) {
-      me.specAsyncError = error;
-    }
-    this.specAsyncError = error;
-  }
-
-  function _promiseIsFulfilled( promise, done, onFulfilledSpec ) {
-    promise.
-      then(
-        this.asyncStep( onFulfilledSpec ),
-        this.getCaptureAsyncError()
-      ).then( done, done );
-  }
-
-  function _promiseIsRejected( promise, done, onRejectedSpec ) {
-    promise.
-      then(
-        onUnexpectedlyFulfilled,
-        this.asyncStep( onRejectedSpec )
-      ).then( done, done );
-
-    function onUnexpectedlyFulfilled( value ) {
-      expect( "fulfilled with " + value ).toEqual( "not fulfilled" );
-    }
-  }
 
   describe( ".core", function () {
     var core = indexedDbAdapter.core;
@@ -106,7 +51,6 @@ describe( 'headway.indexedDbAdapter', function () {
         });
 
         it( "is fulfilled with a connection to the existing database", function ( done ) {
-          //var asyncConnection = core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
           this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
             this.db = db;
             expect( db.name ).toEqual( DB_NAME );
