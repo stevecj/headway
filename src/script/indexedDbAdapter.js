@@ -6,10 +6,18 @@ var headway = headway || {};
 
 headway.indexedDbAdapter = headway.indexedDbAdapter || {};
 
-headway.indexedDbAdapter.core = (function ( module, ayepromise, indexedDB ) {
-  "use strict";
+headway.indexedDbAdapter.core = headway.indexedDbAdapter.core || {};
 
-  module.asyncGetConnection = function asyncGetConnection( dbName, targetVersion ) {
+headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexedDB ) {
+  "use strict";
+  var constructor, proto;
+
+  var constructor = function Connector() {
+  };
+
+  proto = constructor.prototype;
+
+  proto.asyncConnect = function asyncConnect( dbName, targetVersion ) {
     var bootstrap = ayepromise.defer();
     bootstrap.resolve();
 
@@ -22,5 +30,5 @@ headway.indexedDbAdapter.core = (function ( module, ayepromise, indexedDB ) {
     });
   };
 
-  return module;
+  return constructor;
 })( headway.indexedDbAdapter.core || {}, ayepromise, indexedDB );

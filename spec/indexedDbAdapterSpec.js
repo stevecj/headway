@@ -15,64 +15,74 @@ describe( 'headway.indexedDbAdapter', function () {
   describe( ".core", function () {
     var core = indexedDbAdapter.core;
 
-    describe( ".asyncGetConnection()", function () {
-      var DB_NAME, DB_TARGET_VERSION;
-      DB_NAME = 'test';
-      DB_TARGET_VERSION = 11;
+    describe( ".Connector", function () {
+      var Connector = core.Connector;
 
       beforeEach( function () {
-        indexedDB.deleteDatabase( DB_NAME );
-
-        this.def( 'promise', function promise() {
-          return core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
+        this.def( 'subject', function subject() {
+          return new Connector();
         });
       });
 
-      afterEach( function () {
-        if( this.db ) { this.db.close(); }
-        indexedDB.deleteDatabase( DB_NAME );
-      });
+      describe( "#asyncConnect()", function () {
+        var DB_NAME, DB_TARGET_VERSION;
+        DB_NAME = 'test';
+        DB_TARGET_VERSION = 11;
 
-      describe( "when the database does not exist", function () {
-        it( "is fulfilled with a connection to the newly created database", function ( done ) {
-          this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
-            this.db = db;
-            expect( db.name ).toEqual( DB_NAME );
-            expect( db.version ).toEqual( DB_TARGET_VERSION );
+        beforeEach( function () {
+          indexedDB.deleteDatabase( DB_NAME );
+
+          this.def( 'promise', function promise() {
+            return this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION );
           });
         });
-      });
 
-      describe( "when the database exists with the target version", function () {
-        beforeEach( function ( done ) {
-          core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION ).then(
-            this.asyncStep( function ( db ) { db.close(); } )
-          ).then( done, done );
+        afterEach( function () {
+          if( this.db ) { this.db.close(); }
+          indexedDB.deleteDatabase( DB_NAME );
         });
 
-        it( "is fulfilled with a connection to the existing database", function ( done ) {
-          this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
-            this.db = db;
-            expect( db.name ).toEqual( DB_NAME );
-            expect( db.version ).toEqual( DB_TARGET_VERSION );
+        describe( "when the database does not exist", function () {
+          it( "is fulfilled with a connection to the newly created database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.db = db;
+              expect( db.name ).toEqual( DB_NAME );
+              expect( db.version ).toEqual( DB_TARGET_VERSION );
+            });
           });
         });
-      });
 
-      describe( "when the database exists with a later version than the target", function () {
-        beforeEach( function ( done ) {
-          core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION + 1 ).then(
-            this.asyncStep( function ( db ) { db.close(); } )
-          ).then( done, done );
-        });
+        describe( "when the database exists with the target version", function () {
+          beforeEach( function ( done ) {
+            this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION ).then(
+              this.asyncStep( function ( db ) { db.close(); } )
+            ).then( done, done );
+          });
 
-        it( "is rejected with a DOMError instance", function ( done ) {
-          this.promiseIsRejected( this.getPromise(), done, function ( error ) {
-            expect( error instanceof DOMError ).toBeTruthy();
+          it( "is fulfilled with a connection to the existing database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.db = db;
+              expect( db.name ).toEqual( DB_NAME );
+              expect( db.version ).toEqual( DB_TARGET_VERSION );
+            });
           });
         });
-      });
 
+        describe( "when the database exists with a later version than the target", function () {
+          beforeEach( function ( done ) {
+            this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION + 1 ).then(
+              this.asyncStep( function ( db ) { db.close(); } )
+            ).then( done, done );
+          });
+
+          it( "is rejected with a DOMError instance", function ( done ) {
+            this.promiseIsRejected( this.getPromise(), done, function ( error ) {
+              expect( error instanceof DOMError ).toBeTruthy();
+            });
+          });
+        });
+
+      });
     });
   });
 });
