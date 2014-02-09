@@ -20,7 +20,7 @@ describe( 'headway.indexedDbAdapter', function () {
 
       beforeEach( function () {
         this.def( 'subject', function subject() {
-          return new Connector();
+          return new Connector( this.getSchema() );
         });
       });
 
@@ -32,8 +32,12 @@ describe( 'headway.indexedDbAdapter', function () {
         beforeEach( function () {
           indexedDB.deleteDatabase( DB_NAME );
 
+          this.def( 'schema', function schema() {
+            return { version: DB_TARGET_VERSION };
+          });
+
           this.def( 'promise', function promise() {
-            return this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION );
+            return this.getSubject().asyncConnect( DB_NAME );
           });
         });
 
@@ -52,9 +56,9 @@ describe( 'headway.indexedDbAdapter', function () {
           });
         });
 
-        describe( "when the database exists with the target version", function () {
+        describe( "when the database exists with the schema version", function () {
           beforeEach( function ( done ) {
-            this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION ).then(
+            this.getSubject().asyncConnect( DB_NAME ).then(
               this.asyncStep( function ( db ) { db.close(); } )
             ).then( done, done );
           });
@@ -68,9 +72,10 @@ describe( 'headway.indexedDbAdapter', function () {
           });
         });
 
-        describe( "when the database exists with a later version than the target", function () {
+        describe( "when the database exists with a later version than the schema", function () {
           beforeEach( function ( done ) {
-            this.getSubject().asyncConnect( DB_NAME, DB_TARGET_VERSION + 1 ).then(
+            var connector = new Connector( { version: DB_TARGET_VERSION + 1 } );
+            connector.asyncConnect( DB_NAME ).then(
               this.asyncStep( function ( db ) { db.close(); } )
             ).then( done, done );
           });

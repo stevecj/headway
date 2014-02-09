@@ -12,13 +12,18 @@ headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexe
   "use strict";
   var constructor, proto;
 
-  var constructor = function Connector() {
+  var constructor = function Connector( schema ) {
+    this.getSchema = function getSchema() { return schema };
   };
 
   proto = constructor.prototype;
 
-  proto.asyncConnect = function asyncConnect( dbName, targetVersion ) {
-    var bootstrap = ayepromise.defer();
+  proto.asyncConnect = function asyncConnect( dbName ) {
+    var bootstrap, targetVersion;
+
+    targetVersion = this.getSchema().version;
+
+    bootstrap = ayepromise.defer();
     bootstrap.resolve();
 
     return bootstrap.promise.then( function () {
