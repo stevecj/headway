@@ -3,6 +3,7 @@ var headway = headway || {};
 headway.indexedDbAdapter = headway.indexedDbAdapter || {};
 
 headway.indexedDbAdapter.core = (function ( module ) {
+  "use strict";
 
   module.asyncGetConnection = function asyncGetConnection( dbName, targetVersion ) {
     var bootstrap = ayepromise.defer();

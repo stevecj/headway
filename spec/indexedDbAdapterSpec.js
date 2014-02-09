@@ -5,15 +5,28 @@ describe( 'headway.indexedDbAdapter', function () {
   indexedDbAdapter = root.headway.indexedDbAdapter;
 
   beforeEach( function () {
-    this.asyncStep = _asyncStep;
-    this.asyncErrorRecorder = _asyncErrorRecorder;
-    this.promiseIsFulfilled = _promiseIsFulfilled;
-    this.promiseIsRejected  = _promiseIsRejected;
+    this.def                  = _def;
+    this.asyncStep            = _asyncStep;
+    this.getCaptureAsyncError = _getCaptureAsyncError;
+    this.promiseIsFulfilled   = _promiseIsFulfilled;
+    this.promiseIsRejected    = _promiseIsRejected;
   });
 
   afterEach( function () {
     if( this.specAsyncError ) { throw this.specAsyncError; }
   });
+
+  function _def( name, fn ) {
+    var me, getterName, memoName;
+    me = this;
+    getterName = 'get' + name.charAt(0).toUpperCase() + name.substr(1)
+    memoName = '_' + name;
+
+    this[getterName] = function def() {
+      me[memoName] = me[memoName] || fn.call(me);
+      return me[memoName];
+    }
+  }
 
   function _asyncStep( fn ) {
     var me = this;
@@ -26,7 +39,7 @@ describe( 'headway.indexedDbAdapter', function () {
     };
   }
 
-  function _asyncErrorRecorder() {
+  function _getCaptureAsyncError() {
     var me = this;
     return function ( error ) {
       me.specAsyncError = error;
@@ -38,7 +51,7 @@ describe( 'headway.indexedDbAdapter', function () {
     promise.
       then(
         this.asyncStep( onFulfilledSpec ),
-        this.asyncErrorRecorder()
+        this.getCaptureAsyncError()
       ).then( done, done );
   }
 
@@ -63,14 +76,11 @@ describe( 'headway.indexedDbAdapter', function () {
       DB_TARGET_VERSION = 11;
 
       beforeEach( function () {
-        var me = this;
         indexedDB.deleteDatabase( DB_NAME );
 
-        this.subject = function subject() {
-          me.asyncConnection = me.asyncConnection ||
-            core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
-          return this.asyncConnection;
-        };
+        this.def( 'promise', function promise() {
+          return core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
+        });
       });
 
       afterEach( function () {
@@ -80,7 +90,7 @@ describe( 'headway.indexedDbAdapter', function () {
 
       describe( "when the database does not exist", function () {
         it( "is fulfilled with a connection to the newly created database", function ( done ) {
-          this.promiseIsFulfilled( this.subject(), done, function ( db ) {
+          this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
             this.db = db;
             expect( db.name ).toEqual( DB_NAME );
             expect( db.version ).toEqual( DB_TARGET_VERSION );
@@ -97,7 +107,7 @@ describe( 'headway.indexedDbAdapter', function () {
 
         it( "is fulfilled with a connection to the existing database", function ( done ) {
           //var asyncConnection = core.asyncGetConnection( DB_NAME, DB_TARGET_VERSION );
-          this.promiseIsFulfilled( this.subject(), done, function ( db ) {
+          this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
             this.db = db;
             expect( db.name ).toEqual( DB_NAME );
             expect( db.version ).toEqual( DB_TARGET_VERSION );
@@ -113,7 +123,7 @@ describe( 'headway.indexedDbAdapter', function () {
         });
 
         it( "is rejected with a DOMError instance", function ( done ) {
-          this.promiseIsRejected( this.subject(), done, function ( error ) {
+          this.promiseIsRejected( this.getPromise(), done, function ( error ) {
             expect( error instanceof DOMError ).toBeTruthy();
           });
         });
