@@ -1,8 +1,12 @@
+/* JSHint inline configuration  */
+/* global headway:true */
+/* global ayepromise:false, indexedDB:false */
+
 var headway = headway || {};
 
 headway.indexedDbAdapter = headway.indexedDbAdapter || {};
 
-headway.indexedDbAdapter.core = (function ( module ) {
+headway.indexedDbAdapter.core = (function ( module, ayepromise, indexedDB ) {
   "use strict";
 
   module.asyncGetConnection = function asyncGetConnection( dbName, targetVersion ) {
@@ -19,4 +23,4 @@ headway.indexedDbAdapter.core = (function ( module ) {
   };
 
   return module;
-})( headway.indexedDbAdapter.core || {} );
+})( headway.indexedDbAdapter.core || {}, ayepromise, indexedDB );
