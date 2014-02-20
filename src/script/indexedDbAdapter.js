@@ -19,21 +19,54 @@ headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexe
   proto = constructor.prototype;
 
   proto.asyncConnect = function asyncConnect( dbName ) {
-    var bootstrap, targetVersion;
+    var schema, asyncRequest, targetVersion;
 
     targetVersion = this.getSchema().version;
 
-    bootstrap = ayepromise.defer();
-    bootstrap.resolve();
+    asyncRequest = ayepromise.defer();
+    asyncRequest.resolve();
 
-    return bootstrap.promise.then( function () {
+    schema = this.getSchema();
+    return asyncRequest.promise.then( function () {
       var request = indexedDB.open( dbName, targetVersion );
-      var defer = ayepromise.defer();
-      request.onsuccess = function () { defer.resolve ( request.result ); };
-      request.onerror   = function () { defer.reject  ( request.error  ); };
-      return defer.promise;
+      var asyncResponse = ayepromise.defer();
+      request.onsuccess = function () { asyncResponse.resolve ( request.result ); };
+      request.onerror   = function () { asyncResponse.reject  ( request.error  ); };
+      request.onupgradeneeded = function (evt) { if( schema.migrate ) { schema.migrate(); } console.log(evt.oldVersion); console.log(evt.newVersion); };
+      return asyncResponse.promise;
     });
   };
 
   return constructor;
-})( headway.indexedDbAdapter.core || {}, ayepromise, indexedDB );
+})( headway.indexedDbAdapter.core, ayepromise, indexedDB );
+
+headway.indexedDbAdapter.core.ConnectionPool = (function ( module ) {
+  "use strict";
+  var constructor, proto;
+
+  var constructor = function ConnectionPool( connector, dbName) {
+    var pooledDb;
+
+    this.asyncConnect = function asyncConnect() {
+      var defer, promise;
+      if ( pooledDb ) {
+        defer = ayepromise.defer();
+        defer.resolve( pooledDb );
+        return defer.promise;
+      } else {
+        promise = connector.asyncConnect( dbName );
+        promise.then( function( db ) { pooledDb = db; } );
+        return promise;
+      }
+    };
+
+    this.close = function close() {
+      if( pooledDb ) {
+        pooledDb.close();
+        pooledDb = null;
+      }
+    };
+  };
+
+  return constructor;
+})( headway.indexedDbAdapter.core );

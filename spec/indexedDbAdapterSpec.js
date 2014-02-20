@@ -33,7 +33,10 @@ describe( 'headway.indexedDbAdapter', function () {
           indexedDB.deleteDatabase( DB_NAME );
 
           this.def( 'schema', function schema() {
-            return { version: DB_TARGET_VERSION };
+            return {
+              version: DB_TARGET_VERSION,
+              migrate: jasmine.createSpy('schema.migrate')
+            };
           });
 
           this.def( 'promise', function promise() {
@@ -52,6 +55,14 @@ describe( 'headway.indexedDbAdapter', function () {
               this.db = db;
               expect( db.name ).toEqual( DB_NAME );
               expect( db.version ).toEqual( DB_TARGET_VERSION );
+            });
+          });
+
+          it( "invokes the schema migrations for the database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.db = db;
+              expect( this.getSchema().migrate ).toHaveBeenCalled();
+              expect( this.getSchema().migrate.calls.count() ).toEqual( 1 );
             });
           });
         });
@@ -89,5 +100,72 @@ describe( 'headway.indexedDbAdapter', function () {
 
       });
     });
+
+    describe( '.ConnectionPool', function () {
+      var ConnectionPool, DB_NAME;
+      ConnectionPool = core.ConnectionPool;
+      DB_NAME = 'test';
+
+      beforeEach( function () {
+        var connector = new core.Connector({ version: 1 });
+        this.def( 'subject', function subject() {
+          return new ConnectionPool( connector, DB_NAME );
+        });
+      });
+
+      afterEach( function () {
+        indexedDB.deleteDatabase( DB_NAME );
+      });
+
+      // NOTE: #close() is not explicitly tested, but existing examples
+      //       covering #asyncConnect() should fail if that's not
+      //       working.
+
+      describe( '#asyncConnect()', function () {
+
+        beforeEach( function () {
+          indexedDB.deleteDatabase( DB_NAME );
+
+          this.def( 'promise', function promise() {
+            return this.getSubject().asyncConnect();
+          });
+        });
+
+        afterEach( function () {
+          indexedDB.deleteDatabase( DB_NAME );
+        });
+
+        describe( "on initial invocation", function () {
+          it( "is fulfilled with a connection to the database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.db = db;
+              expect( db.name ).toEqual( DB_NAME );
+              this.getSubject().close();
+            });
+          });
+        });
+
+        describe( "on subsequent invocation", function () {
+
+          beforeEach( function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.pooledDb = db;
+              // Re-define promise so will be re-evaluated.
+              this.def( 'promise', function promise() {
+                return this.getSubject().asyncConnect();
+              });
+            });
+          });
+
+          it( "is fulfilled again with the prior connection to the database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              expect( db ).toBe( this.pooledDb );
+              this.getSubject().close();
+            });
+          });
+        });
+      });
+    });
+
   });
 });

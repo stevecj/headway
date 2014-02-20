@@ -23,6 +23,8 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
     getterName = 'get' + name.charAt(0).toUpperCase() + name.substr(1)
     memoName = '_' + name;
 
+    // Unmemoize result when re-defined after previously invoked.
+    delete this[memoName];
     this[getterName] = function def() {
       me[memoName] = me[memoName] || fn.call(me);
       return me[memoName];
@@ -67,6 +69,18 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
       expect( "fulfilled with " + value ).toEqual( "not fulfilled" );
     }
   }
+
+  var exampleNumForLog = 1;
+  module.logExampleStep = function logExampleStep( name ) {
+    if ( this.exampleNumForLog ) {
+      this.exampleStepForLog = this.exampleStepForLog + 1;
+    } else {
+      this.exampleNumForLog = exampleNumForLog;
+      exampleNumForLog = exampleNumForLog + 1;
+      this.exampleStepForLog = 1;
+    }
+    console.log( '' + this.exampleNumForLog + ':' + this.exampleStepForLog + ' : ' + name);
+  };
 
   return module;
 })( jasmine.headway.userContextExt.extensions || {} );
