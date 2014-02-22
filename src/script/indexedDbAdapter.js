@@ -8,12 +8,12 @@ headway.indexedDbAdapter = headway.indexedDbAdapter || {};
 
 headway.indexedDbAdapter.core = headway.indexedDbAdapter.core || {};
 
-headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexedDB ) {
+headway.indexedDbAdapter.core.Connector = (function ( ayepromise, indexedDB ) {
   "use strict";
   var constructor, proto;
 
-  var constructor = function Connector( schema ) {
-    this.getSchema = function getSchema() { return schema };
+  constructor = function Connector( schema ) {
+    this.getSchema = function getSchema() { return schema; };
   };
 
   proto = constructor.prototype;
@@ -43,12 +43,10 @@ headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexe
   };
 
   return constructor;
-})( headway.indexedDbAdapter.core, ayepromise, indexedDB );
+})( ayepromise, indexedDB );
 
-headway.indexedDbAdapter.core.ConnectionPool = (function ( module ) {
+headway.indexedDbAdapter.core.ConnectionPool = (function ( ayepromise ) {
   "use strict";
-  var constructor, proto;
-
   var constructor = function ConnectionPool( connector, dbName) {
     var pooledDb;
 
@@ -74,14 +72,13 @@ headway.indexedDbAdapter.core.ConnectionPool = (function ( module ) {
   };
 
   return constructor;
-})( headway.indexedDbAdapter.core );
+})( ayepromise );
 
-headway.indexedDbAdapter.core.Schema = (function ( module ) {
+headway.indexedDbAdapter.core.Schema = (function () {
   "use strict";
   var constructor, proto;
 
-  var constructor = function Schema() {
-  };
+  constructor = function Schema() { };
 
   proto = constructor.prototype;
 
@@ -95,4 +92,4 @@ headway.indexedDbAdapter.core.Schema = (function ( module ) {
   };
 
   return constructor;
-})( headway.indexedDbAdapter.core );
+})();

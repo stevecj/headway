@@ -1,3 +1,6 @@
+/* JSHint inline configuration  */
+/* global jasmine:false, expect:false */
+
 jasmine.headway = jasmine.headway || {};
 
 jasmine.headway.userContextExt = (function ( module ) {
@@ -20,7 +23,7 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
   module.def = function def( name, fn ) {
     var me, getterName, memoName;
     me = this;
-    getterName = 'get' + name.charAt(0).toUpperCase() + name.substr(1)
+    getterName = 'get' + name.charAt(0).toUpperCase() + name.substr(1);
     memoName = '_' + name;
 
     // Unmemoize result when re-defined after previously invoked.
@@ -28,8 +31,8 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
     this[getterName] = function def() {
       me[memoName] = me[memoName] || fn.call(me);
       return me[memoName];
-    }
-  }
+    };
+  };
 
   module.asyncStep = function asyncStep( fn ) {
     var me = this;
@@ -40,15 +43,14 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
         me.specAsyncError = e;
       }
     };
-  }
+  };
 
   module.getCaptureAsyncError = function getCaptureAsyncError() {
     var me = this;
     return function ( error ) {
       me.specAsyncError = error;
-    }
-    this.specAsyncError = error;
-  }
+    };
+  };
 
   module.promiseIsFulfilled = function promiseIsFulfilled( promise, done, onFulfilledSpec ) {
     promise.
@@ -56,7 +58,7 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
         this.asyncStep( onFulfilledSpec ),
         this.getCaptureAsyncError()
       ).then( done, done );
-  }
+  };
 
   module.promiseIsRejected = function promiseIsRejected( promise, done, onRejectedSpec ) {
     promise.
@@ -68,7 +70,7 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
     function onUnexpectedlyFulfilled( value ) {
       expect( "fulfilled with " + value ).toEqual( "not fulfilled" );
     }
-  }
+  };
 
   var exampleNumForLog = 1;
   module.logExampleStep = function logExampleStep( name ) {

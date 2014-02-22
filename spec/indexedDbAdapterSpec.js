@@ -1,3 +1,8 @@
+/* JSHint inline configuration  */
+/* global jasmine:false, describe:false, beforeEach:false */
+/* global afterEach:false, it:false, expect:false */
+/* global DOMError:false, indexedDB:false */
+
 describe( 'headway.indexedDbAdapter', function () {
   "use strict";
   var root, indexedDbAdapter;
