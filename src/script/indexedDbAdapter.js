@@ -32,7 +32,12 @@ headway.indexedDbAdapter.core.Connector = (function ( module, ayepromise, indexe
       var asyncResponse = ayepromise.defer();
       request.onsuccess = function () { asyncResponse.resolve ( request.result ); };
       request.onerror   = function () { asyncResponse.reject  ( request.error  ); };
-      request.onupgradeneeded = function (evt) { if( schema.migrate ) { schema.migrate(); } console.log(evt.oldVersion); console.log(evt.newVersion); };
+      request.onupgradeneeded = function (evt) {
+        if( schema.migrate ) {
+          var db = request.result;
+          schema.migrate( db, evt.oldVersion, evt.newVersion );
+        }
+      };
       return asyncResponse.promise;
     });
   };
@@ -66,6 +71,27 @@ headway.indexedDbAdapter.core.ConnectionPool = (function ( module ) {
         pooledDb = null;
       }
     };
+  };
+
+  return constructor;
+})( headway.indexedDbAdapter.core );
+
+headway.indexedDbAdapter.core.Schema = (function ( module ) {
+  "use strict";
+  var constructor, proto;
+
+  var constructor = function Schema() {
+  };
+
+  proto = constructor.prototype;
+
+  proto.version = 1;
+
+  proto.migrate = function migrate( db, fromVersion, toVersion ) {
+    db.createObjectStore( 'worksheet', {
+      keyPath       : 'id' ,
+      autoIncrement : true
+    });
   };
 
   return constructor;

@@ -60,8 +60,13 @@ describe( 'headway.indexedDbAdapter', function () {
 
           it( "invokes the schema migrations for the database", function ( done ) {
             this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              var FROM_VERSION, TO_VERSION;
               this.db = db;
-              expect( this.getSchema().migrate ).toHaveBeenCalled();
+              FROM_VERSION = 0;
+              TO_VERSION   = DB_TARGET_VERSION;
+              expect( this.getSchema().migrate ).toHaveBeenCalledWith(
+                db, FROM_VERSION, TO_VERSION
+              );
               expect( this.getSchema().migrate.calls.count() ).toEqual( 1 );
             });
           });
@@ -70,7 +75,11 @@ describe( 'headway.indexedDbAdapter', function () {
         describe( "when the database exists with the schema version", function () {
           beforeEach( function ( done ) {
             this.getSubject().asyncConnect( DB_NAME ).then(
-              this.asyncStep( function ( db ) { db.close(); } )
+              this.asyncStep( function ( db ) {
+                db.close();
+                // Only care about calls on re-open, not previous open to create db.
+                this.getSchema().migrate.calls.reset();
+              })
             ).then( done, done );
           });
 
@@ -79,6 +88,13 @@ describe( 'headway.indexedDbAdapter', function () {
               this.db = db;
               expect( db.name ).toEqual( DB_NAME );
               expect( db.version ).toEqual( DB_TARGET_VERSION );
+            });
+          });
+
+          it( "does not invoke the schema migrations for the database", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              this.db = db;
+              expect( this.getSchema().migrate ).not.toHaveBeenCalled();
             });
           });
         });
@@ -161,6 +177,55 @@ describe( 'headway.indexedDbAdapter', function () {
             this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
               expect( db ).toBe( this.pooledDb );
               this.getSubject().close();
+            });
+          });
+        });
+      });
+    });
+
+    describe( '.Schema', function () {
+      var Schema = core.Schema;
+      var DB_NAME = 'test';
+
+      beforeEach( function () {
+        this.def( 'subject', function subject() {
+          return new Schema();
+        });
+      });
+
+      it( "has a version number of 1", function () {
+        expect( this.getSubject().version ).toEqual( 1 );
+      });
+
+      describe( '#migrate()', function() {
+        describe( "invoked in the context of opening/upgrading a database", function () {
+          beforeEach( function () {
+            var connector;
+
+            indexedDB.deleteDatabase( DB_NAME );
+
+            connector = new core.Connector( this.getSubject() );
+
+            this.def( 'connectionPool', function () {
+              return new core.ConnectionPool( connector, DB_NAME );
+            });
+            this.def( 'promise', function () {
+              return this.getConnectionPool().asyncConnect();
+            });
+          });
+
+          afterEach( function () {
+            this.getConnectionPool().close();
+            indexedDB.deleteDatabase( DB_NAME );
+          });
+
+          it( "creates the \"worksheet\" object store", function ( done ) {
+            this.promiseIsFulfilled( this.getPromise(), done, function ( db ) {
+              var transaction, worksheetStore;
+              transaction = db.transaction(['worksheet']);
+              worksheetStore = transaction.objectStore('worksheet');
+              expect( worksheetStore.keyPath ).toEqual( 'id' );
+              expect( worksheetStore.autoIncrement ).toEqual( true );
             });
           });
         });
