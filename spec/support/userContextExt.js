@@ -38,7 +38,7 @@ jasmine.headway.userContextExt.extensions = (function ( module ) {
     var me = this;
     return function () {
       try {
-        fn.apply( me, arguments );
+        if ( fn ) { fn.apply( me, arguments ); }
       } catch( e ) {
         me.specAsyncError = e;
       }
