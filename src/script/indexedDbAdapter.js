@@ -9,12 +9,12 @@ headway.indexedDbAdapter = ( function ( module ) {
   var connectionPool;
 
   module.getConnectionPool = function getConnectionPool() {
-    var core, schema, connector;
+    var dbAccess, schema, connector;
     if( ! connectionPool ) {
-      core = module.core;
-      schema = new core.Schema();
-      connector = new core.Connector( schema );
-      connectionPool = new core.ConnectionPool( connector, 'headway' );
+      dbAccess = module.dbAccess;
+      schema = new dbAccess.Schema();
+      connector = new dbAccess.Connector( schema );
+      connectionPool = new dbAccess.ConnectionPool( connector, 'headway' );
     }
     return connectionPool;
   };
@@ -87,9 +87,9 @@ headway.indexedDbAdapter.WorksheetRepo = ( function ( module ) {
   return constructor;
 })( headway.indexedDbAdapter );
 
-headway.indexedDbAdapter.core = headway.indexedDbAdapter.core || {};
+headway.indexedDbAdapter.dbAccess = headway.indexedDbAdapter.dbAccess || {};
 
-headway.indexedDbAdapter.core.Connector = (function ( ayepromise, indexedDB ) {
+headway.indexedDbAdapter.dbAccess.Connector = (function ( ayepromise, indexedDB ) {
   "use strict";
   var constructor, proto;
 
@@ -126,7 +126,7 @@ headway.indexedDbAdapter.core.Connector = (function ( ayepromise, indexedDB ) {
   return constructor;
 })( ayepromise, indexedDB );
 
-headway.indexedDbAdapter.core.ConnectionPool = (function ( ayepromise ) {
+headway.indexedDbAdapter.dbAccess.ConnectionPool = (function ( ayepromise ) {
   "use strict";
   var constructor = function ConnectionPool( connector, dbName) {
     var pooledDb;
@@ -159,7 +159,7 @@ headway.indexedDbAdapter.core.ConnectionPool = (function ( ayepromise ) {
   return constructor;
 })( ayepromise );
 
-headway.indexedDbAdapter.core.Schema = (function () {
+headway.indexedDbAdapter.dbAccess.Schema = (function () {
   "use strict";
   var constructor, proto;
 

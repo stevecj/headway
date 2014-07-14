@@ -17,11 +17,11 @@ describe( 'headway.indexedDbAdapter', function () {
     if( this.specAsyncError ) { throw this.specAsyncError; }
   });
 
-  describe( ".core", function () {
-    var core = indexedDbAdapter.core;
+  describe( ".dbAccess", function () {
+    var dbAccess = indexedDbAdapter.dbAccess;
 
     describe( ".Connector", function () {
-      var Connector = core.Connector;
+      var Connector = dbAccess.Connector;
 
       beforeEach( function () {
         this.def( 'subject', function subject() {
@@ -124,11 +124,11 @@ describe( 'headway.indexedDbAdapter', function () {
 
     describe( '.ConnectionPool', function () {
       var ConnectionPool, DB_NAME;
-      ConnectionPool = core.ConnectionPool;
+      ConnectionPool = dbAccess.ConnectionPool;
       DB_NAME = 'test';
 
       beforeEach( function () {
-        var connector = new core.Connector({ version: 1 });
+        var connector = new dbAccess.Connector({ version: 1 });
         this.def( 'subject', function subject() {
           return new ConnectionPool( connector, DB_NAME );
         });
@@ -189,7 +189,7 @@ describe( 'headway.indexedDbAdapter', function () {
     });
 
     describe( '.Schema', function () {
-      var Schema = core.Schema;
+      var Schema = dbAccess.Schema;
       var DB_NAME = 'test';
 
       beforeEach( function () {
@@ -209,10 +209,10 @@ describe( 'headway.indexedDbAdapter', function () {
 
             indexedDB.deleteDatabase( DB_NAME );
 
-            connector = new core.Connector( this.getSubject() );
+            connector = new dbAccess.Connector( this.getSubject() );
 
             this.def( 'connectionPool', function () {
-              return new core.ConnectionPool( connector, DB_NAME );
+              return new dbAccess.ConnectionPool( connector, DB_NAME );
             });
             this.def( 'promise', function () {
               return this.getConnectionPool().asyncConnect();
